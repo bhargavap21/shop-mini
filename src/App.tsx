@@ -2,6 +2,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment } from '@react-three/drei'
 import { Keyboard3D } from './components/Keyboard3D'
+import { ComponentSearchModal } from './components/ComponentSearchModal'
 
 // Types for our keyboard configuration
 interface KeyboardConfig {
@@ -26,12 +27,31 @@ export function App() {
     stabilizers: 'durock'
   })
   const [isLoaded, setIsLoaded] = useState(false)
+  const [selectedComponent, setSelectedComponent] = useState<'keycaps' | 'switches' | 'case' | null>(null)
+  const [selectedProducts, setSelectedProducts] = useState<{
+    keycaps: any | null
+    switches: any | null
+    case: any | null
+  }>({
+    keycaps: null,
+    switches: null,
+    case: null
+  })
 
   useEffect(() => {
     // Trigger animations after component mounts
     const timer = setTimeout(() => setIsLoaded(true), 100)
     return () => clearTimeout(timer)
   }, [])
+
+  // Handle product selection
+  const handleProductSelect = (product: any, componentType: 'keycaps' | 'switches' | 'case') => {
+    setSelectedProducts(prev => ({
+      ...prev,
+      [componentType]: product
+    }))
+    console.log(`Selected ${componentType}:`, product)
+  }
 
   // Welcome/Landing Page with INSANE animations
   if (currentPage === 'welcome') {
@@ -413,7 +433,7 @@ export function App() {
           </button>
         </div>
 
-        {/* 3D Keyboard View */}
+        {/* 3D Keyboard View with Clickable Overlays */}
         <div className="mb-8 h-96 rounded-2xl bg-gradient-to-br from-slate-900/60 to-slate-800/60 border border-slate-700/50 backdrop-blur-sm relative overflow-hidden">
           <Suspense fallback={
             <div className="w-full h-full flex items-center justify-center">
@@ -451,47 +471,177 @@ export function App() {
             </Canvas>
           </Suspense>
           
+          {/* Invisible Clickable Overlays for 3D Components */}
+          {/* Keycaps Layer (Top) */}
+          <button 
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('Keycaps 3D area clicked!')
+              setSelectedComponent('keycaps')
+            }}
+            className="absolute top-8 left-1/2 transform -translate-x-1/2 w-48 h-20 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-all duration-200 z-10 border border-blue-500/30 hover:border-blue-500/60"
+            title="Click to shop Keycaps"
+          >
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-blue-300 text-sm font-medium opacity-0 hover:opacity-100 transition-opacity">
+                🎛️ Keycaps
+              </span>
+            </div>
+          </button>
+          
+          {/* Switches Layer (Middle) */}
+          <button 
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('Switches 3D area clicked!')
+              setSelectedComponent('switches')
+            }}
+            className="absolute top-32 left-1/2 transform -translate-x-1/2 w-48 h-16 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg transition-all duration-200 z-10 border border-amber-500/30 hover:border-amber-500/60"
+            title="Click to shop Switches"
+          >
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-amber-300 text-sm font-medium opacity-0 hover:opacity-100 transition-opacity">
+                ⚙️ Switches
+              </span>
+            </div>
+          </button>
+          
+          {/* Case Layer (Bottom) */}
+          <button 
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('Case 3D area clicked!')
+              setSelectedComponent('case')
+            }}
+            className="absolute bottom-20 left-1/2 transform -translate-x-1/2 w-56 h-16 bg-slate-500/10 hover:bg-slate-500/20 rounded-lg transition-all duration-200 z-10 border border-slate-500/30 hover:border-slate-500/60"
+            title="Click to shop Case"
+          >
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-slate-300 text-sm font-medium opacity-0 hover:opacity-100 transition-opacity">
+                📦 Case
+              </span>
+            </div>
+          </button>
+          
           {/* 3D Controls hint */}
-          <div className="absolute bottom-4 left-4 text-slate-400 text-xs bg-slate-900/60 px-3 py-2 rounded-lg backdrop-blur-sm">
+          <div className="absolute bottom-4 left-4 text-slate-400 text-xs bg-slate-900/60 px-3 py-2 rounded-lg backdrop-blur-sm pointer-events-none">
             <div className="font-medium mb-1">Controls</div>
-            <div>Drag to rotate • Scroll to zoom</div>
+            <div>Drag to rotate • Scroll to zoom • Click components to shop</div>
           </div>
           
           {/* KeySim attribution */}
-          <div className="absolute bottom-4 right-4 text-slate-500 text-xs bg-slate-900/60 px-3 py-2 rounded-lg backdrop-blur-sm">
+          <div className="absolute bottom-4 right-4 text-slate-500 text-xs bg-slate-900/60 px-3 py-2 rounded-lg backdrop-blur-sm pointer-events-none">
             Powered by KeySim 3D Engine
           </div>
         </div>
 
-        {/* Component Details */}
-        <div className="space-y-4 mb-8">
+        {/* Component Details - Now Clickable */}
+        <div className="space-y-4 mb-32 relative z-20">
           <div className="grid grid-cols-3 gap-4">
-            <div className="bg-slate-900/40 border border-slate-700/50 rounded-xl p-4">
+            <button 
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                console.log('Keycaps clicked!')
+                setSelectedComponent('keycaps')
+              }}
+              onTouchStart={(e) => {
+                e.preventDefault()
+                console.log('Keycaps touched!')
+                setSelectedComponent('keycaps')
+              }}
+              className="bg-slate-900/40 border border-slate-700/50 rounded-xl p-4 hover:bg-slate-900/60 hover:border-blue-500/50 transition-all duration-200 text-left group relative z-30 cursor-pointer"
+            >
               <div className="flex items-center space-x-2 mb-2">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                <h3 className="text-white font-medium text-sm">Keycaps</h3>
+                <div className="w-3 h-3 bg-blue-500 rounded-full group-hover:scale-110 transition-transform"></div>
+                <h3 className="text-white font-medium text-sm group-hover:text-blue-300 transition-colors">Keycaps</h3>
+                <svg className="w-3 h-3 text-slate-500 group-hover:text-blue-400 ml-auto opacity-0 group-hover:opacity-100 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </div>
-              <p className="text-slate-400 text-xs">{keyboardConfig.keycaps.toUpperCase()} Profile</p>
-              <p className="text-slate-500 text-xs mt-1">Premium quality</p>
-            </div>
+              {selectedProducts.keycaps ? (
+                <>
+                  <p className="text-slate-300 text-xs font-medium group-hover:text-white transition-colors">{selectedProducts.keycaps.title}</p>
+                  <p className="text-green-400 text-xs mt-1">${selectedProducts.keycaps.priceRange?.minVariantPrice?.amount || 'N/A'}</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-slate-400 text-xs group-hover:text-slate-300 transition-colors">{keyboardConfig.keycaps.toUpperCase()} Profile</p>
+                  <p className="text-slate-500 text-xs mt-1 group-hover:text-blue-400/70 transition-colors">Click to shop</p>
+                </>
+              )}
+            </button>
             
-            <div className="bg-slate-900/40 border border-slate-700/50 rounded-xl p-4">
+            <button 
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                console.log('Switches clicked!')
+                setSelectedComponent('switches')
+              }}
+              onTouchStart={(e) => {
+                e.preventDefault()
+                console.log('Switches touched!')
+                setSelectedComponent('switches')
+              }}
+              className="bg-slate-900/40 border border-slate-700/50 rounded-xl p-4 hover:bg-slate-900/60 hover:border-amber-500/50 transition-all duration-200 text-left group relative z-30 cursor-pointer"
+            >
               <div className="flex items-center space-x-2 mb-2">
-                <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
-                <h3 className="text-white font-medium text-sm">Switches</h3>
+                <div className="w-3 h-3 bg-amber-500 rounded-full group-hover:scale-110 transition-transform"></div>
+                <h3 className="text-white font-medium text-sm group-hover:text-amber-300 transition-colors">Switches</h3>
+                <svg className="w-3 h-3 text-slate-500 group-hover:text-amber-400 ml-auto opacity-0 group-hover:opacity-100 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </div>
-              <p className="text-slate-400 text-xs">{keyboardConfig.switches} Type</p>
-              <p className="text-slate-500 text-xs mt-1">Optimized feel</p>
-            </div>
+              {selectedProducts.switches ? (
+                <>
+                  <p className="text-slate-300 text-xs font-medium group-hover:text-white transition-colors">{selectedProducts.switches.title}</p>
+                  <p className="text-green-400 text-xs mt-1">${selectedProducts.switches.priceRange?.minVariantPrice?.amount || 'N/A'}</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-slate-400 text-xs group-hover:text-slate-300 transition-colors">{keyboardConfig.switches} Type</p>
+                  <p className="text-slate-500 text-xs mt-1 group-hover:text-amber-400/70 transition-colors">Click to shop</p>
+                </>
+              )}
+            </button>
             
-            <div className="bg-slate-900/40 border border-slate-700/50 rounded-xl p-4">
+            <button 
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                console.log('Case clicked!')
+                setSelectedComponent('case')
+              }}
+              onTouchStart={(e) => {
+                e.preventDefault()
+                console.log('Case touched!')
+                setSelectedComponent('case')
+              }}
+              className="bg-slate-900/40 border border-slate-700/50 rounded-xl p-4 hover:bg-slate-900/60 hover:border-slate-400/50 transition-all duration-200 text-left group relative z-30 cursor-pointer"
+            >
               <div className="flex items-center space-x-2 mb-2">
-                <div className="w-3 h-3 bg-slate-500 rounded-full"></div>
-                <h3 className="text-white font-medium text-sm">Case</h3>
+                <div className="w-3 h-3 bg-slate-500 rounded-full group-hover:scale-110 transition-transform"></div>
+                <h3 className="text-white font-medium text-sm group-hover:text-slate-300 transition-colors">Case</h3>
+                <svg className="w-3 h-3 text-slate-500 group-hover:text-slate-400 ml-auto opacity-0 group-hover:opacity-100 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </div>
-              <p className="text-slate-400 text-xs">{keyboardConfig.case} Material</p>
-              <p className="text-slate-500 text-xs mt-1">Durable build</p>
-            </div>
+              {selectedProducts.case ? (
+                <>
+                  <p className="text-slate-300 text-xs font-medium group-hover:text-white transition-colors">{selectedProducts.case.title}</p>
+                  <p className="text-green-400 text-xs mt-1">${selectedProducts.case.priceRange?.minVariantPrice?.amount || 'N/A'}</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-slate-400 text-xs group-hover:text-slate-300 transition-colors">{keyboardConfig.case} Material</p>
+                  <p className="text-slate-500 text-xs mt-1 group-hover:text-slate-400/70 transition-colors">Click to shop</p>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
@@ -502,11 +652,33 @@ export function App() {
               Customize Parts
             </button>
             <button className="flex-1 bg-white text-slate-950 font-medium py-3 px-4 rounded-xl hover:shadow-lg transition-all duration-200">
-              Add to Cart - $399
+              Add to Cart - ${(() => {
+                let total = 0
+                if (selectedProducts.keycaps?.priceRange?.minVariantPrice?.amount) {
+                  total += parseFloat(selectedProducts.keycaps.priceRange.minVariantPrice.amount)
+                }
+                if (selectedProducts.switches?.priceRange?.minVariantPrice?.amount) {
+                  total += parseFloat(selectedProducts.switches.priceRange.minVariantPrice.amount)
+                }
+                if (selectedProducts.case?.priceRange?.minVariantPrice?.amount) {
+                  total += parseFloat(selectedProducts.case.priceRange.minVariantPrice.amount)
+                }
+                return total > 0 ? total.toFixed(2) : '399'
+              })()}
             </button>
           </div>
         </div>
       </div>
+      
+      {/* Component Search Modal */}
+      <ComponentSearchModal
+        isOpen={selectedComponent !== null}
+        onClose={() => setSelectedComponent(null)}
+        componentType={selectedComponent}
+        currentConfig={keyboardConfig}
+        onProductSelect={handleProductSelect}
+        selectedProduct={selectedComponent ? selectedProducts[selectedComponent] : null}
+      />
     </div>
   )
 }

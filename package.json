@@ -18,8 +18,8 @@
     "vite": "^7.1.1"
   },
   "dependencies": {
-    "@react-three/drei": "^10.6.1",
-    "@react-three/fiber": "9.2.0",
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.18.0",
     "@shopify/shop-minis-react": "0.0.30",
     "graphql": "^16.11.0",
     "react": "18.2.0",

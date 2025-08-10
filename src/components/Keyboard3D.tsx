@@ -1,6 +1,6 @@
 import { useRef, useMemo, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Text, RoundedBox, Sphere, useGLTF } from '@react-three/drei'
+import { RoundedBox, Sphere } from '@react-three/drei'
 import * as THREE from 'three'
 
 interface KeyboardConfig {
@@ -250,21 +250,22 @@ function Keycap3D({
         />
       </RoundedBox>
       
-      {/* Key legend */}
+      {/* Key legend - simple colored dot for visual distinction */}
       {legend && legend.length <= 4 && (
-        <Text
-          position={[0, exploded ? keycapHeight/2 + 0.05 : keycapHeight/2 + 0.05, 0]}
-          fontSize={0.15}
-          color={material === 'black' ? '#ffffff' : '#333333'}
-          anchorX="center"
-          anchorY="middle"
-        >
-          {legend}
-        </Text>
+        <mesh position={[0, exploded ? keycapHeight/2 + 0.02 : keycapHeight/2 + 0.02, 0]}>
+          <circleGeometry args={[0.05, 8]} />
+          <meshBasicMaterial 
+            color={material === 'black' ? '#ffffff' : '#333333'}
+            transparent
+            opacity={0.7}
+          />
+        </mesh>
       )}
     </group>
   )
 }
+
+// GLB Model disabled to prevent loading errors - using geometric fallback instead
 
 // 3D Switch Component with GLB model and fallback
 function Switch3D({ 
@@ -279,8 +280,6 @@ function Switch3D({
   index: number
 }) {
   const meshRef = useRef<THREE.Mesh>(null)
-  const groupRef = useRef<THREE.Group>(null)
-  const [useGLTFModel, setUseGLTFModel] = useState(true)
 
   // Switch colors based on type (KeySim inspired)
   const switchColors = {
@@ -291,58 +290,22 @@ function Switch3D({
 
   const switchColor = switchColors[switchType as keyof typeof switchColors] || '#6b7280'
 
-  // Try to load GLB model with error handling
-  let glbContent = null
-  try {
-    if (useGLTFModel) {
-      const { scene } = useGLTF('/cherry_mx_switches.glb')
-      glbContent = useMemo(() => {
-        const clonedScene = scene.clone()
-        clonedScene.traverse((child) => {
-          if (child instanceof THREE.Mesh && child.material) {
-            const material = child.material as THREE.MeshStandardMaterial
-            material.color = new THREE.Color(switchColor)
-            material.needsUpdate = true
-            child.castShadow = true
-            child.receiveShadow = true
-          }
-        })
-        return clonedScene
-      }, [scene, switchColor])
-    }
-  } catch (error) {
-    console.warn('Failed to load GLB model, using fallback:', error)
-    setUseGLTFModel(false)
-  }
-
   useFrame((state) => {
-    const targetRef = groupRef.current || meshRef.current
-    if (targetRef) {
+    if (meshRef.current) {
       const time = state.clock.elapsedTime
       const floatOffset = Math.sin(time * 1.2 + index * 0.15) * 0.015
       
       if (exploded) {
-        targetRef.position.y = position[1] + floatOffset
-        targetRef.rotation.x = Math.sin(time * 0.5 + index * 0.2) * 0.02
-        targetRef.rotation.z = Math.cos(time * 0.7 + index * 0.15) * 0.01
+        meshRef.current.position.y = position[1] + floatOffset
+        meshRef.current.rotation.x = Math.sin(time * 0.5 + index * 0.2) * 0.02
+        meshRef.current.rotation.z = Math.cos(time * 0.7 + index * 0.15) * 0.01
       } else {
-        targetRef.position.y = position[1] + floatOffset - 0.2
+        meshRef.current.position.y = position[1] + floatOffset - 0.2
       }
     }
   })
 
-  // Render GLB model if loaded successfully, otherwise use fallback geometry
-  if (useGLTFModel && glbContent) {
-    return (
-      <group ref={groupRef} position={position}>
-        <primitive 
-          object={glbContent} 
-          scale={[0.8, 0.8, 0.8]} 
-          rotation={[0, 0, 0]} 
-        />
-      </group>
-    )
-  }
+  // Using geometric fallback instead of GLB to prevent loading errors
 
   // Enhanced realistic switch geometry fallback (Cherry MX inspired)
   return (
@@ -355,6 +318,7 @@ function Switch3D({
         smoothness={6}
         castShadow
         receiveShadow
+        position={[0, exploded ? 0 : -0.2, 0]}
       >
         <meshStandardMaterial 
           color="#1a202c"
@@ -605,5 +569,4 @@ export function Keyboard3D({ config, exploded = false }: Keyboard3DProps) {
   )
 }
 
-// Preload the GLB model for better performance
-useGLTF.preload('/cherry_mx_switches.glb')
+// GLB model will be loaded on-demand with proper error handling

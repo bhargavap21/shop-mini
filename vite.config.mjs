@@ -6,6 +6,11 @@ export default defineConfig({
   root: '.',
   plugins: [react(), tailwindcss()],
   optimizeDeps: {
-    include: ['@shopify/shop-minis-react'],
+    include: ['@shopify/shop-minis-react', 'three'],
+    exclude: ['troika-three-text']
   },
+  define: {
+    // Disable troika workers
+    'process.env.DISABLE_TROIKA_WORKERS': 'true'
+  }
 })
