@@ -99,8 +99,11 @@ interface MultiProfileKeyboardSoundsProps {
 }
 
 export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeyboardSoundsProps) {
+  // Generate unique instance ID to track multiple component instances
+  const instanceId = useRef(Math.random().toString(36).substr(2, 9));
+  
   // Test console connection
-  console.log('🎹 MultiProfileKeyboardSounds component loaded!');
+  console.log('🎹 MultiProfileKeyboardSounds component loaded! Instance:', instanceId.current);
   
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -127,8 +130,20 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
 
   // Add global keyboard event listener - always active, but only responds when audio is initialized
   useEffect(() => {
+    let lastEventTime = 0;
+    let lastEventCode = '';
+    
     const handleGlobalKeyPress = (event: KeyboardEvent) => {
-      console.log('🌍 Global key detected:', { key: event.key, code: event.code, audioInitialized });
+      // Prevent duplicate events within 100ms for the same key
+      const currentTime = event.timeStamp;
+      if (currentTime - lastEventTime < 100 && event.code === lastEventCode) {
+        console.log('🚫 Duplicate event ignored:', event.code);
+        return;
+      }
+      lastEventTime = currentTime;
+      lastEventCode = event.code;
+      
+      console.log(`🌍 Global key detected [${instanceId.current}]:`, { key: event.key, code: event.code, audioInitialized });
       
       if (!audioInitialized) {
         console.log('❌ Audio not initialized, ignoring key');
@@ -158,11 +173,11 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
       }
     };
 
-    console.log('🎹 Adding global keyboard listener (always active)');
+    console.log(`🎹 Adding global keyboard listener [${instanceId.current}] (always active)`);
     document.addEventListener('keydown', handleGlobalKeyPress);
 
     return () => {
-      console.log('🎹 Removing global keyboard listener (component unmount)');
+      console.log(`🎹 Removing global keyboard listener [${instanceId.current}] (component unmount)`);
       document.removeEventListener('keydown', handleGlobalKeyPress);
     };
   }, []); // Empty dependency array - listener stays active for component lifetime
@@ -238,6 +253,12 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
 
   const playKeyboardSound = async (key: string) => {
     if (!audioInitialized || !audioContextRef.current) return;
+    
+    // Prevent playing the same sound too quickly
+    if (isPlaying && currentlyPlayingKey === key) {
+      console.log('🚫 Sound already playing for key:', key);
+      return;
+    }
     
     setIsPlaying(true);
     setCurrentlyPlayingKey(key);
