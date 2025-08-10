@@ -1,4 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls, Environment } from '@react-three/drei'
+import { Keyboard3D } from './components/Keyboard3D'
 import { KeyboardSoundTester } from './components/KeyboardSoundTester'
 import { SimpleAudioTest } from './components/SimpleAudioTest'
 import { ShopifyKeyboardSounds } from './components/ShopifyKeyboardSounds'
@@ -413,7 +416,7 @@ export function App() {
                 onClick={() => setCurrentPage('builder')}
                 className="flex-1 bg-white text-slate-950 font-medium py-3 px-4 rounded-xl hover:shadow-lg transition-all duration-200"
               >
-                See Recommendations
+                See 3D Preview
               </button>
             </div>
           </div>
@@ -422,7 +425,7 @@ export function App() {
     )
   }
 
-  // Expanded Floating View - Separated Keyboard Components
+  // 3D Exploded View - Real KeySim-inspired 3D Rendering
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-slate-950 to-zinc-950">
       <div className="pt-4 px-4 pb-24">
@@ -438,8 +441,8 @@ export function App() {
               </svg>
             </button>
             <div>
-              <h1 className="text-xl font-semibold text-white">Keyboard Builder</h1>
-              <p className="text-slate-400 text-sm">Exploded view of your custom keyboard</p>
+              <h1 className="text-xl font-semibold text-white">3D Keyboard Builder</h1>
+              <p className="text-slate-400 text-sm">KeySim-powered exploded view</p>
             </div>
           </div>
           
@@ -450,87 +453,53 @@ export function App() {
           </button>
         </div>
 
-        {/* 3D Exploded View - Integration with KeySim */}
-        <div className="mb-8 h-80 rounded-2xl bg-gradient-to-br from-slate-900/60 to-slate-800/60 border border-slate-700/50 backdrop-blur-sm relative overflow-hidden">
-          {/* Floating Keycaps */}
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 animate-float">
-            <div className="relative">
-              <div className="w-40 h-8 bg-gradient-to-br from-slate-300 to-slate-500 rounded-lg shadow-2xl transform perspective-1000 rotateX-15 hover:rotateX-5 transition-transform duration-500">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-lg" />
-                <div className="absolute inset-x-2 inset-y-1 grid grid-cols-10 gap-0.5">
-                  {[...Array(10)].map((_, i) => (
-                    <div key={i} className="bg-white/30 rounded-sm" />
-                  ))}
-                </div>
-              </div>
-              <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                Keycaps
+        {/* 3D Keyboard View */}
+        <div className="mb-8 h-96 rounded-2xl bg-gradient-to-br from-slate-900/60 to-slate-800/60 border border-slate-700/50 backdrop-blur-sm relative overflow-hidden">
+          <Suspense fallback={
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-white text-sm">Loading 3D Preview...</p>
               </div>
             </div>
+          }>
+            <Canvas camera={{ position: [15, 10, 15], fov: 45 }}>
+              <Environment preset="studio" />
+              <ambientLight intensity={0.4} />
+              <pointLight position={[10, 10, 10]} intensity={1} />
+              <pointLight position={[-10, 5, -10]} intensity={0.5} />
+              <spotLight position={[0, 20, 0]} intensity={0.8} angle={0.3} penumbra={0.2} />
+              
+              <Keyboard3D 
+                config={{
+                  layout: keyboardConfig.layout,
+                  switches: keyboardConfig.switches,
+                  keycaps: keyboardConfig.keycaps,
+                  case: keyboardConfig.case
+                }}
+                exploded={true}
+              />
+              
+              <OrbitControls 
+                enablePan={false}
+                minDistance={10}
+                maxDistance={30}
+                maxPolarAngle={Math.PI / 2}
+                autoRotate
+                autoRotateSpeed={0.5}
+              />
+            </Canvas>
+          </Suspense>
+          
+          {/* 3D Controls hint */}
+          <div className="absolute bottom-4 left-4 text-slate-400 text-xs bg-slate-900/60 px-3 py-2 rounded-lg backdrop-blur-sm">
+            <div className="font-medium mb-1">Controls</div>
+            <div>Drag to rotate • Scroll to zoom</div>
           </div>
-
-          {/* Floating Switches */}
-          <div className="absolute top-24 left-1/2 transform -translate-x-1/2 animate-float" style={{ animationDelay: '0.5s' }}>
-            <div className="relative">
-              <div className="w-36 h-6 bg-gradient-to-br from-amber-400 to-amber-600 rounded-md shadow-xl transform perspective-1000 rotateX-10 hover:rotateX-0 transition-transform duration-500">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-md" />
-                <div className="absolute inset-x-2 inset-y-1 grid grid-cols-8 gap-0.5">
-                  {[...Array(8)].map((_, i) => (
-                    <div key={i} className="bg-white/40 rounded-xs" />
-                  ))}
-                </div>
-              </div>
-              <div className="absolute -top-2 -right-2 bg-amber-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                Switches
-              </div>
-            </div>
-          </div>
-
-          {/* Floating Case */}
-          <div className="absolute top-44 left-1/2 transform -translate-x-1/2 animate-float" style={{ animationDelay: '1s' }}>
-            <div className="relative">
-              <div className="w-44 h-12 bg-gradient-to-br from-slate-600 to-slate-800 rounded-xl shadow-2xl transform perspective-1000 rotateX-5 hover:rotateX-0 transition-transform duration-500">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-xl" />
-                <div className="absolute inset-2 bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg">
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-lg" />
-                </div>
-              </div>
-              <div className="absolute -top-2 -right-2 bg-slate-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                Case
-              </div>
-            </div>
-          </div>
-
-          {/* Assembly Lines */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none">
-            <defs>
-              <linearGradient id="assemblyLine" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="rgba(99, 102, 241, 0)" />
-                <stop offset="50%" stopColor="rgba(99, 102, 241, 0.5)" />
-                <stop offset="100%" stopColor="rgba(99, 102, 241, 0)" />
-              </linearGradient>
-            </defs>
-            <line x1="50%" y1="20%" x2="50%" y2="35%" stroke="url(#assemblyLine)" strokeWidth="2" strokeDasharray="5,5" className="animate-pulse" />
-            <line x1="50%" y1="40%" x2="50%" y2="55%" stroke="url(#assemblyLine)" strokeWidth="2" strokeDasharray="5,5" className="animate-pulse" style={{ animationDelay: '0.5s' }} />
-          </svg>
-
-          {/* Background particles */}
-          {[...Array(12)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-blue-400/30 rounded-full animate-ping"
-              style={{
-                left: `${20 + Math.random() * 60}%`,
-                top: `${20 + Math.random() * 60}%`,
-                animationDelay: `${i * 300}ms`,
-                animationDuration: `${2000 + i * 200}ms`
-              }}
-            />
-          ))}
-
-          {/* Integration placeholder */}
-          <div className="absolute bottom-4 left-4 text-slate-500 text-xs">
-            KeySim 3D Integration Ready
+          
+          {/* KeySim attribution */}
+          <div className="absolute bottom-4 right-4 text-slate-500 text-xs bg-slate-900/60 px-3 py-2 rounded-lg backdrop-blur-sm">
+            Powered by KeySim 3D Engine
           </div>
         </div>
 
