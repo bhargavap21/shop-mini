@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { HOLY_PANDAS_SOUNDS, KEY_SOUND_MAP } from './HolyPandasSounds';
-import { BANANA_SPLIT_SOUNDS, BANANA_SPLIT_PROFILE } from './BananaSplitSounds';
+import { HOLY_PANDAS_SOUNDS } from './HolyPandasSounds';
+import { BANANA_SPLIT_SOUNDS } from './BananaSplitSounds';
 import { SteelSeriesSounds } from './SteelSeriesSounds';
 import { TealiosSounds } from './TealiosSounds';
+import { MX_SPEED_SILVER_SOUNDS } from './MxSpeedSilverSounds';
+import { CHERRY_MX_BLACK_EXTRACTED_SOUNDS } from './CherryMxBlackExtractedSounds';
 
 // Sound profiles configuration
 const SOUND_PROFILES = {
@@ -37,6 +39,22 @@ const SOUND_PROFILES = {
     sounds: TealiosSounds,
     hasSpecialKeys: true, // Has space, enter, backspace, shift, ctrl, caps, tab
     color: 'teal'
+  },
+  'mx-speed-silver': {
+    id: 'mx-speed-silver',
+    name: 'MX Speed Silver',
+    description: 'Ultra-fast linear gaming switches with 1.2mm actuation',
+    sounds: MX_SPEED_SILVER_SOUNDS,
+    hasSpecialKeys: false, // Only generic sounds - evenly distributed
+    color: 'gray'
+  },
+  'cherry-mx-black': {
+    id: 'cherry-mx-black',
+    name: 'Cherry MX Black PBT',
+    description: 'Heavy linear switches with consistent actuation (Extracted)',
+    sounds: CHERRY_MX_BLACK_EXTRACTED_SOUNDS,
+    hasSpecialKeys: false, // Uses generic distribution like other multi-file profiles
+    color: 'black'
   }
 };
 
@@ -58,7 +76,10 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
   const keyToSoundMap = useRef<Map<string, number>>(new Map());
   const keyboardRef = useRef<HTMLDivElement>(null);
 
+
   const currentProfile = SOUND_PROFILES[selectedProfile];
+
+
 
   // Auto-focus the keyboard div when audio is initialized
   useEffect(() => {
@@ -117,8 +138,10 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
       return keyToSoundMap.current.get(key)!;
     }
 
+
+
     // Create a consistent mapping based on key character for ALL keys
-    const availableSounds = currentProfile.sounds.generic.length;
+    const availableSounds = (currentProfile.sounds as any).generic?.length || 1;
     let soundIndex = 0;
 
     if (key.length === 1) {
@@ -147,6 +170,8 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
         await audioContextRef.current.resume();
       }
       
+
+      
       setAudioInitialized(true);
       
       // Play a quick test sound
@@ -168,42 +193,44 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
         await audioContextRef.current.resume();
       }
 
+
+
       let soundData: string;
       const profile = currentProfile.sounds;
       
-      // Handle special keys for profiles that have them
+      // Handle special keys for profiles that have them (non-sprite profiles only)
       if (currentProfile.hasSpecialKeys && (selectedProfile === 'holy-pandas' || selectedProfile === 'steelseries' || selectedProfile === 'tealios')) {
         if (key === ' ' || key === 'Space') {
-          soundData = profile.space || profile.generic[getSoundIndexForKey(key)];
+          soundData = (profile as any).space || (profile as any).generic[getSoundIndexForKey(key)];
         } else if (key === 'Enter') {
-          soundData = profile.enter || profile.generic[getSoundIndexForKey(key)];
+          soundData = (profile as any).enter || (profile as any).generic[getSoundIndexForKey(key)];
         } else if (key === 'Backspace') {
-          soundData = profile.backspace || profile.generic[getSoundIndexForKey(key)];
+          soundData = (profile as any).backspace || (profile as any).generic[getSoundIndexForKey(key)];
         } else if (selectedProfile === 'tealios') {
           // Tealios has additional special keys
           if (key === 'Tab') {
-            soundData = profile.tab || profile.generic[getSoundIndexForKey(key)];
+            soundData = (profile as any).tab || (profile as any).generic[getSoundIndexForKey(key)];
           } else if (key === 'Shift') {
-            soundData = profile.shift || profile.generic[getSoundIndexForKey(key)];
+            soundData = (profile as any).shift || (profile as any).generic[getSoundIndexForKey(key)];
           } else if (key === 'Control' || key === 'Ctrl') {
-            soundData = profile.ctrl || profile.generic[getSoundIndexForKey(key)];
+            soundData = (profile as any).ctrl || (profile as any).generic[getSoundIndexForKey(key)];
           } else if (key === 'CapsLock' || key === 'Caps') {
-            soundData = profile.caps || profile.generic[getSoundIndexForKey(key)];
+            soundData = (profile as any).caps || (profile as any).generic[getSoundIndexForKey(key)];
           } else {
             // Use consistent sound mapping for generic keys
             const soundIndex = getSoundIndexForKey(key);
-            soundData = profile.generic[soundIndex];
+            soundData = (profile as any).generic[soundIndex];
           }
         } else {
           // For Holy Pandas and SteelSeries - use consistent sound mapping for generic keys
           const soundIndex = getSoundIndexForKey(key);
-          soundData = profile.generic[soundIndex];
+          soundData = (profile as any).generic[soundIndex];
         }
       } else {
-        // For Banana Split - ALL keys use the evenly distributed generic sounds
-        // This includes Space, Enter, Backspace - they all get mapped to one of the 7 sounds
+        // For Banana Split and MX Speed Silver - ALL keys use the evenly distributed generic sounds
+        // This includes Space, Enter, Backspace - they all get mapped to available sounds
         const soundIndex = getSoundIndexForKey(key);
-        soundData = profile.generic[soundIndex];
+        soundData = (profile as any).generic[soundIndex];
       }
 
       const audio = new Audio(soundData);
@@ -314,7 +341,7 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
             >
               {Object.entries(SOUND_PROFILES).map(([id, profile]) => (
                 <option key={id} value={id}>
-                  {profile.name} ({profile.sounds.generic.length} sounds{profile.hasSpecialKeys ? ' + special keys' : ''})
+                  {profile.name} ({(profile.sounds as any).generic?.length || 0} sounds{profile.hasSpecialKeys ? ' + special keys' : ''})
                 </option>
               ))}
             </select>
@@ -340,7 +367,7 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
             </p>
             <div className="flex items-center gap-4 text-xs">
               <span className="text-slate-400">
-                🎵 {currentProfile.sounds.generic.length} generic sounds
+                🎵 {(currentProfile.sounds as any).generic?.length || 0} sounds
               </span>
               {currentProfile.hasSpecialKeys && (
                 <span className="text-purple-400 bg-purple-900/20 px-2 py-1 rounded">
@@ -478,7 +505,7 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
                 ✅ Profile: {currentProfile.name}
               </h3>
               <p className="text-slate-400 text-xs">
-                {currentProfile.sounds.generic.length} generic sounds
+                {(currentProfile.sounds as any).generic?.length || 0} sounds
                 {currentProfile.hasSpecialKeys && ' + special key sounds'}
               </p>
               <p className="text-slate-500 text-xs mt-2">
@@ -487,7 +514,7 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
               {isPlaying && (
                 <p className="text-blue-400 text-xs mt-2 animate-pulse">
                   🎵 Playing: {currentlyPlayingKey === 'generic' 
-                    ? `Sound ${(currentGenericIndex.current % currentProfile.sounds.generic.length) || currentProfile.sounds.generic.length}` 
+                    ? `Sound ${(currentGenericIndex.current % ((currentProfile.sounds as any).generic?.length || 1)) || ((currentProfile.sounds as any).generic?.length || 1)}` 
                     : currentlyPlayingKey}
                 </p>
               )}
