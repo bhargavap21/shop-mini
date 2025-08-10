@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { HOLY_PANDAS_SOUNDS, KEY_SOUND_MAP } from './HolyPandasSounds';
 import { BANANA_SPLIT_SOUNDS, BANANA_SPLIT_PROFILE } from './BananaSplitSounds';
+import { SteelSeriesSounds } from './SteelSeriesSounds';
+import { TealiosSounds } from './TealiosSounds';
 
 // Sound profiles configuration
 const SOUND_PROFILES = {
@@ -19,6 +21,22 @@ const SOUND_PROFILES = {
     sounds: BANANA_SPLIT_SOUNDS,
     hasSpecialKeys: false, // Only generic sounds
     color: 'yellow'
+  },
+  'steelseries': {
+    id: 'steelseries',
+    name: 'SteelSeries Apex Pro TKL',
+    description: 'Mechanical gaming switches with crisp actuation',
+    sounds: SteelSeriesSounds,
+    hasSpecialKeys: true, // Has space, enter, backspace
+    color: 'blue'
+  },
+  'tealios': {
+    id: 'tealios',
+    name: 'Tealios V2 on PBT',
+    description: 'Premium linear switches with smooth keystrokes',
+    sounds: TealiosSounds,
+    hasSpecialKeys: true, // Has space, enter, backspace, shift, ctrl, caps, tab
+    color: 'teal'
   }
 };
 
@@ -27,15 +45,70 @@ interface MultiProfileKeyboardSoundsProps {
 }
 
 export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeyboardSoundsProps) {
+  // Test console connection
+  console.log('🎹 MultiProfileKeyboardSounds component loaded!');
+  
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentlyPlayingKey, setCurrentlyPlayingKey] = useState<string | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<keyof typeof SOUND_PROFILES>('holy-pandas');
+  const [testText, setTestText] = useState('');
   const audioContextRef = useRef<AudioContext | null>(null);
   const currentGenericIndex = useRef(0);
   const keyToSoundMap = useRef<Map<string, number>>(new Map());
+  const keyboardRef = useRef<HTMLDivElement>(null);
 
   const currentProfile = SOUND_PROFILES[selectedProfile];
+
+  // Auto-focus the keyboard div when audio is initialized
+  useEffect(() => {
+    if (audioInitialized && keyboardRef.current) {
+      console.log('🎯 Auto-focusing keyboard area');
+      keyboardRef.current.focus();
+    }
+  }, [audioInitialized]);
+
+  // Add global keyboard event listener - always active, but only responds when audio is initialized
+  useEffect(() => {
+    const handleGlobalKeyPress = (event: KeyboardEvent) => {
+      console.log('🌍 Global key detected:', { key: event.key, code: event.code, audioInitialized });
+      
+      if (!audioInitialized) {
+        console.log('❌ Audio not initialized, ignoring key');
+        return;
+      }
+      
+      const { key, code } = event;
+      
+      if (code === 'Space') {
+        event.preventDefault();
+        playKeyboardSound('Space');
+      } else if (code === 'Enter') {
+        playKeyboardSound('Enter');
+      } else if (code === 'Backspace') {
+        playKeyboardSound('Backspace');
+      } else if (code === 'Tab') {
+        event.preventDefault();
+        playKeyboardSound('Tab');
+      } else if (code === 'ShiftLeft' || code === 'ShiftRight') {
+        playKeyboardSound('Shift');
+      } else if (code === 'ControlLeft' || code === 'ControlRight') {
+        playKeyboardSound('Ctrl');
+      } else if (code === 'CapsLock') {
+        playKeyboardSound('Caps');
+      } else if (code.startsWith('Key') || code.startsWith('Digit')) {
+        playKeyboardSound(key.toUpperCase());
+      }
+    };
+
+    console.log('🎹 Adding global keyboard listener (always active)');
+    document.addEventListener('keydown', handleGlobalKeyPress);
+
+    return () => {
+      console.log('🎹 Removing global keyboard listener (component unmount)');
+      document.removeEventListener('keydown', handleGlobalKeyPress);
+    };
+  }, []); // Empty dependency array - listener stays active for component lifetime
 
   // Function to get consistent sound index for a key
   const getSoundIndexForKey = (key: string): number => {
@@ -66,6 +139,7 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
   };
 
   const initializeAudio = async () => {
+    console.log('🔊 Initialize button clicked!');
     try {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       
@@ -97,16 +171,31 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
       let soundData: string;
       const profile = currentProfile.sounds;
       
-      // For Holy Pandas profile - use special keys where available
-      if (currentProfile.hasSpecialKeys && selectedProfile === 'holy-pandas') {
+      // Handle special keys for profiles that have them
+      if (currentProfile.hasSpecialKeys && (selectedProfile === 'holy-pandas' || selectedProfile === 'steelseries' || selectedProfile === 'tealios')) {
         if (key === ' ' || key === 'Space') {
-          soundData = profile.space || profile.generic[0];
+          soundData = profile.space || profile.generic[getSoundIndexForKey(key)];
         } else if (key === 'Enter') {
-          soundData = profile.enter || profile.generic[0];
+          soundData = profile.enter || profile.generic[getSoundIndexForKey(key)];
         } else if (key === 'Backspace') {
-          soundData = profile.backspace || profile.generic[0];
+          soundData = profile.backspace || profile.generic[getSoundIndexForKey(key)];
+        } else if (selectedProfile === 'tealios') {
+          // Tealios has additional special keys
+          if (key === 'Tab') {
+            soundData = profile.tab || profile.generic[getSoundIndexForKey(key)];
+          } else if (key === 'Shift') {
+            soundData = profile.shift || profile.generic[getSoundIndexForKey(key)];
+          } else if (key === 'Control' || key === 'Ctrl') {
+            soundData = profile.ctrl || profile.generic[getSoundIndexForKey(key)];
+          } else if (key === 'CapsLock' || key === 'Caps') {
+            soundData = profile.caps || profile.generic[getSoundIndexForKey(key)];
+          } else {
+            // Use consistent sound mapping for generic keys
+            const soundIndex = getSoundIndexForKey(key);
+            soundData = profile.generic[soundIndex];
+          }
         } else {
-          // Use consistent sound mapping for generic keys
+          // For Holy Pandas and SteelSeries - use consistent sound mapping for generic keys
           const soundIndex = getSoundIndexForKey(key);
           soundData = profile.generic[soundIndex];
         }
@@ -139,6 +228,9 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
     
     const { key, code } = event;
     
+    // Debug logging
+    console.log('Key pressed:', { key, code });
+    
     if (code === 'Space') {
       event.preventDefault();
       playKeyboardSound('Space');
@@ -146,8 +238,18 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
       playKeyboardSound('Enter');
     } else if (code === 'Backspace') {
       playKeyboardSound('Backspace');
+    } else if (code === 'Tab') {
+      event.preventDefault();
+      playKeyboardSound('Tab');
+    } else if (code === 'ShiftLeft' || code === 'ShiftRight') {
+      playKeyboardSound('Shift');
+    } else if (code === 'ControlLeft' || code === 'ControlRight') {
+      playKeyboardSound('Ctrl');
+    } else if (code === 'CapsLock') {
+      playKeyboardSound('Caps');
     } else if (code.startsWith('Key') || code.startsWith('Digit')) {
-      playKeyboardSound('generic');
+      // Use the actual key character for consistent mapping
+      playKeyboardSound(key.toUpperCase());
     }
   };
 
@@ -167,6 +269,29 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
 
   return (
     <div className={`p-6 bg-gradient-to-br from-slate-900 to-gray-900 rounded-2xl ${className}`}>
+      {/* Keyboard Test Input */}
+      <div className="mb-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+        <label className="block text-sm font-medium text-slate-300 mb-2">
+          🧪 Mac Keyboard Test - Type here to verify your keyboard works:
+        </label>
+        <input
+          type="text"
+          value={testText}
+          onChange={(e) => {
+            setTestText(e.target.value);
+            console.log('📝 Text input changed:', e.target.value);
+          }}
+          onKeyDown={(e) => {
+            console.log('📝 Input keydown:', { key: e.key, code: e.code });
+          }}
+          placeholder="Type anything here to test your Mac keyboard..."
+          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+        <div className="text-xs text-slate-400 mt-1">
+          Current text: "{testText}" (Length: {testText.length})
+        </div>
+      </div>
+
       {/* Header */}
       <div className="mb-6 text-center">
         <h2 className="text-2xl font-bold text-white mb-2">🎹 Multi-Profile Keyboard Sounds</h2>
@@ -294,7 +419,8 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
 
           {/* Virtual Keyboard */}
           <div 
-            className="bg-slate-800/30 p-4 rounded-xl border border-slate-700 focus:outline-none" 
+            ref={keyboardRef}
+            className="bg-slate-800/30 p-4 rounded-xl border border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500" 
             tabIndex={0}
             onKeyDown={handleKeyPress}
           >
