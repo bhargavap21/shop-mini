@@ -206,6 +206,24 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
         await audioContextRef.current.resume();
       }
       
+      // Try to take over audio focus to minimize system sounds
+      try {
+        // Request audio session control (iOS)
+        if ('webkitAudioContext' in window) {
+          console.log('🎵 Attempting to take iOS audio session control...');
+          
+          // Create a silent audio buffer to maintain audio context priority
+          const silentBuffer = audioContextRef.current.createBuffer(1, 1, 22050);
+          const silentSource = audioContextRef.current.createBufferSource();
+          silentSource.buffer = silentBuffer;
+          silentSource.connect(audioContextRef.current.destination);
+          silentSource.start();
+          
+          console.log('✅ Audio session control established');
+        }
+      } catch (sessionError) {
+        console.warn('Audio session control failed:', sessionError);
+      }
 
       
       setAudioInitialized(true);
@@ -430,10 +448,27 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
             <h3 className="text-lg font-medium text-white mb-4 text-center">
               📱 Native iPhone Keyboard
             </h3>
-            <p className="text-slate-400 text-sm text-center mb-6">
+            <p className="text-slate-400 text-sm text-center mb-4">
               Tap the text area below to open your iPhone keyboard.<br/>
               Every key you type will play the selected switch sound!
             </p>
+            
+            {/* iOS Keyboard Sound Instructions */}
+            <div className="mb-4 p-3 bg-amber-900/20 border border-amber-700/30 rounded-lg">
+              <div className="flex items-start space-x-2">
+                <span className="text-amber-400 text-lg">⚠️</span>
+                <div>
+                  <p className="text-amber-200 text-sm font-medium mb-1">
+                    iOS Keyboard Sounds Notice
+                  </p>
+                  <p className="text-amber-300/80 text-xs leading-relaxed">
+                    For the best experience, disable iOS keyboard sounds:<br/>
+                    <span className="font-medium text-amber-200">iPhone Settings → Sounds & Haptics → Keyboard Clicks → OFF</span><br/>
+                    <span className="text-amber-400/60">This prevents double audio (iOS + our custom sounds)</span>
+                  </p>
+                </div>
+              </div>
+            </div>
             
             {/* Large text input area optimized for iOS */}
             <textarea
@@ -453,6 +488,26 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
                 // Also capture input events for better iOS compatibility
                 const target = e.target as HTMLTextAreaElement;
                 console.log('📱 iOS input event:', target.value);
+                
+                // Try to play our sound on input event too (for better iOS compatibility)
+                if (audioInitialized && target.value.length > testText.length) {
+                  const newChar = target.value[target.value.length - 1];
+                  playKeyboardSound(newChar);
+                }
+              }}
+              onFocus={() => {
+                console.log('📱 Input focused - iOS keyboard should appear');
+                // Try to minimize system interactions when our input is focused
+                const bodyStyle = document.body.style as any;
+                bodyStyle.webkitUserSelect = 'none';
+                bodyStyle.webkitTouchCallout = 'none';
+              }}
+              onBlur={() => {
+                console.log('📱 Input blurred - iOS keyboard hidden');
+                // Re-enable selections when not focused
+                const bodyStyle = document.body.style as any;
+                bodyStyle.webkitUserSelect = '';
+                bodyStyle.webkitTouchCallout = '';
               }}
               placeholder="Tap here to open your iPhone keyboard and start typing..."
               className="w-full h-40 px-4 py-4 bg-slate-700 border-2 border-slate-600 rounded-xl text-white placeholder-slate-400 text-lg leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-200"
@@ -460,11 +515,21 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
                 fontSize: '16px', // Prevents zoom on iOS Safari
                 lineHeight: '1.6',
                 WebkitAppearance: 'none', // Remove iOS styling
-                WebkitBorderRadius: '12px' // Ensure rounded corners on iOS
+                WebkitBorderRadius: '12px', // Ensure rounded corners on iOS
+                WebkitUserSelect: 'text', // Enable text selection in input
+                WebkitTouchCallout: 'none', // Disable callouts/context menus
+                WebkitTapHighlightColor: 'transparent' // Remove tap highlight
               }}
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck="false"
+              // Additional iOS-specific attributes to minimize system sounds
+              inputMode="text"
+              enterKeyHint="done"
+              // Attempt to reduce system audio feedback
+              autoComplete="off"
+              role="textbox"
+              aria-label="Custom keyboard sound tester"
             />
             
             {/* Text info and controls */}
