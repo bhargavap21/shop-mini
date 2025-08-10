@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment } from '@react-three/drei'
 import { Keyboard3D } from './components/Keyboard3D'
 import { ComponentSearchModal } from './components/ComponentSearchModal'
-import { AdvancedHolyPandasKeyboard } from './components/AdvancedHolyPandasKeyboard'
+import { MultiProfileKeyboardSounds } from './components/MultiProfileKeyboardSounds'
 
 // Types for our keyboard configuration
 interface KeyboardConfig {
@@ -437,7 +437,7 @@ export function App() {
           </div>
 
           {/* Sound Demo Component */}
-          <AdvancedHolyPandasKeyboard />
+          <MultiProfileKeyboardSounds />
         </div>
       </div>
     )
