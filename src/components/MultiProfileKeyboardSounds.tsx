@@ -5,6 +5,10 @@ import { SteelSeriesSounds } from './SteelSeriesSounds';
 import { TealiosSounds } from './TealiosSounds';
 import { MX_SPEED_SILVER_SOUNDS } from './MxSpeedSilverSounds';
 import { CHERRY_MX_BLACK_EXTRACTED_SOUNDS } from './CherryMxBlackExtractedSounds';
+import { CHERRYMX_BLUE_PBT_SOUNDS } from './CherrymxBluePbtSounds';
+import { CHERRYMX_BROWN_PBT_SOUNDS } from './CherrymxBrownPbtSounds';
+import { CHERRYMX_RED_PBT_SOUNDS } from './CherrymxRedPbtSounds';
+import { TOPRE_PURPLE_HYBRID_PBT_SOUNDS } from './ToprePurpleHybridPbtSounds';
 
 // Sound profiles configuration
 const SOUND_PROFILES = {
@@ -55,6 +59,38 @@ const SOUND_PROFILES = {
     sounds: CHERRY_MX_BLACK_EXTRACTED_SOUNDS,
     hasSpecialKeys: false, // Uses generic distribution like other multi-file profiles
     color: 'black'
+  },
+  'cherrymx-blue-pbt': {
+    id: 'cherrymx-blue-pbt',
+    name: 'Cherry MX Blue PBT',
+    description: 'Classic clicky switches with tactile bump and audible click',
+    sounds: CHERRYMX_BLUE_PBT_SOUNDS,
+    hasSpecialKeys: false, // Uses generic distribution
+    color: 'blue'
+  },
+  'cherrymx-brown-pbt': {
+    id: 'cherrymx-brown-pbt',
+    name: 'Cherry MX Brown PBT',
+    description: 'Tactile switches with bump but no click sound',
+    sounds: CHERRYMX_BROWN_PBT_SOUNDS,
+    hasSpecialKeys: false, // Uses generic distribution
+    color: 'amber'
+  },
+  'cherrymx-red-pbt': {
+    id: 'cherrymx-red-pbt',
+    name: 'Cherry MX Red PBT',
+    description: 'Linear switches with smooth keystroke and no tactile bump',
+    sounds: CHERRYMX_RED_PBT_SOUNDS,
+    hasSpecialKeys: false, // Uses generic distribution
+    color: 'red'
+  },
+  'topre-purple-hybrid-pbt': {
+    id: 'topre-purple-hybrid-pbt',
+    name: 'Topre Purple Hybrid PBT',
+    description: 'Premium electro-capacitive switches with unique thock sound',
+    sounds: TOPRE_PURPLE_HYBRID_PBT_SOUNDS,
+    hasSpecialKeys: false, // Uses generic distribution
+    color: 'purple'
   }
 };
 
