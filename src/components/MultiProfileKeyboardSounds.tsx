@@ -110,7 +110,7 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
   const audioContextRef = useRef<AudioContext | null>(null);
   const currentGenericIndex = useRef(0);
   const keyToSoundMap = useRef<Map<string, number>>(new Map());
-  const keyboardRef = useRef<HTMLDivElement>(null);
+  const keyboardRef = useRef<HTMLTextAreaElement>(null);
 
 
   const currentProfile = SOUND_PROFILES[selectedProfile];
@@ -286,35 +286,7 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
     }
   };
 
-  const handleKeyPress = (event: React.KeyboardEvent) => {
-    if (!audioInitialized) return;
-    
-    const { key, code } = event;
-    
-    // Debug logging
-    console.log('Key pressed:', { key, code });
-    
-    if (code === 'Space') {
-      event.preventDefault();
-      playKeyboardSound('Space');
-    } else if (code === 'Enter') {
-      playKeyboardSound('Enter');
-    } else if (code === 'Backspace') {
-      playKeyboardSound('Backspace');
-    } else if (code === 'Tab') {
-      event.preventDefault();
-      playKeyboardSound('Tab');
-    } else if (code === 'ShiftLeft' || code === 'ShiftRight') {
-      playKeyboardSound('Shift');
-    } else if (code === 'ControlLeft' || code === 'ControlRight') {
-      playKeyboardSound('Ctrl');
-    } else if (code === 'CapsLock') {
-      playKeyboardSound('Caps');
-    } else if (code.startsWith('Key') || code.startsWith('Digit')) {
-      // Use the actual key character for consistent mapping
-      playKeyboardSound(key.toUpperCase());
-    }
-  };
+
 
   const handleProfileChange = (profileId: keyof typeof SOUND_PROFILES) => {
     setSelectedProfile(profileId);
@@ -322,38 +294,11 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
     keyToSoundMap.current.clear(); // Clear key mappings for new profile
   };
 
-  // Keyboard layout
-  const keyRows = [
-    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'Backspace'],
-    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Enter'],
-    ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
-  ];
+  // No longer need keyboard layout - using native iOS keyboard
 
   return (
     <div className={`p-6 bg-gradient-to-br from-slate-900 to-gray-900 rounded-2xl ${className}`}>
-      {/* Keyboard Test Input */}
-      <div className="mb-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-        <label className="block text-sm font-medium text-slate-300 mb-2">
-          🧪 Mac Keyboard Test - Type here to verify your keyboard works:
-        </label>
-        <input
-          type="text"
-          value={testText}
-          onChange={(e) => {
-            setTestText(e.target.value);
-            console.log('📝 Text input changed:', e.target.value);
-          }}
-          onKeyDown={(e) => {
-            console.log('📝 Input keydown:', { key: e.key, code: e.code });
-          }}
-          placeholder="Type anything here to test your Mac keyboard..."
-          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-        <div className="text-xs text-slate-400 mt-1">
-          Current text: "{testText}" (Length: {testText.length})
-        </div>
-      </div>
+
 
       {/* Header */}
       <div className="mb-6 text-center">
@@ -480,58 +425,83 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
             )}
           </div>
 
-          {/* Virtual Keyboard */}
-          <div 
-            ref={keyboardRef}
-            className="bg-slate-800/30 p-4 rounded-xl border border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500" 
-            tabIndex={0}
-            onKeyDown={handleKeyPress}
-          >
-            <p className="text-slate-400 text-sm text-center mb-4">
-              Click keys or use your physical keyboard
+          {/* Native iOS Keyboard Input */}
+          <div className="bg-slate-800/30 p-6 rounded-xl border border-slate-700">
+            <h3 className="text-lg font-medium text-white mb-4 text-center">
+              📱 Native iPhone Keyboard
+            </h3>
+            <p className="text-slate-400 text-sm text-center mb-6">
+              Tap the text area below to open your iPhone keyboard.<br/>
+              Every key you type will play the selected switch sound!
             </p>
             
-            <div className="space-y-2">
-              {keyRows.map((row, rowIndex) => (
-                <div key={rowIndex} className="flex justify-center space-x-1">
-                  {row.map((key) => (
-                    <button
-                      key={key}
-                      onClick={() => playKeyboardSound(key)}
-                      className={`${
-                        key === 'Backspace' ? 'w-16' : key === 'Enter' ? 'w-14' : 'w-10'
-                      } h-10 rounded-lg text-white text-xs font-medium transition-all duration-150 border border-slate-600 ${
-                        currentlyPlayingKey === key || (currentlyPlayingKey === 'generic' && !['Space', 'Enter', 'Backspace'].includes(key))
-                          ? 'bg-blue-600 transform scale-95' 
-                          : currentProfile.hasSpecialKeys && key === 'Backspace' 
-                            ? 'bg-red-700 hover:bg-red-600'
-                            : currentProfile.hasSpecialKeys && key === 'Enter'
-                              ? 'bg-emerald-700 hover:bg-emerald-600'
-                              : 'bg-slate-700 hover:bg-slate-600'
-                      }`}
-                    >
-                      {key === 'Backspace' ? '⌫' : key === 'Enter' ? '⏎' : key}
-                    </button>
-                  ))}
-                </div>
-              ))}
-              
-              {/* Space bar */}
-              <div className="flex justify-center mt-2">
+            {/* Large text input area optimized for iOS */}
+            <textarea
+              ref={keyboardRef}
+              value={testText}
+              onChange={(e) => {
+                setTestText(e.target.value);
+                console.log('📱 Native iOS keyboard input:', e.target.value);
+              }}
+              onKeyDown={(e) => {
+                console.log('📱 Native iOS key event:', { key: e.key, code: e.code });
+                if (audioInitialized) {
+                  playKeyboardSound(e.key);
+                }
+              }}
+              onInput={(e) => {
+                // Also capture input events for better iOS compatibility
+                const target = e.target as HTMLTextAreaElement;
+                console.log('📱 iOS input event:', target.value);
+              }}
+              placeholder="Tap here to open your iPhone keyboard and start typing..."
+              className="w-full h-40 px-4 py-4 bg-slate-700 border-2 border-slate-600 rounded-xl text-white placeholder-slate-400 text-lg leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-200"
+              style={{
+                fontSize: '16px', // Prevents zoom on iOS Safari
+                lineHeight: '1.6',
+                WebkitAppearance: 'none', // Remove iOS styling
+                WebkitBorderRadius: '12px' // Ensure rounded corners on iOS
+              }}
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck="false"
+            />
+            
+            {/* Text info and controls */}
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-slate-400">
+                <span className="font-medium">{testText.length}</span> characters typed
+              </div>
+              <div className="flex space-x-2">
                 <button
-                  onClick={() => playKeyboardSound('Space')}
-                  className={`w-48 h-10 ${
-                    currentProfile.hasSpecialKeys 
-                      ? 'bg-purple-700 hover:bg-purple-600' 
-                      : 'bg-slate-700 hover:bg-slate-600'
-                  } border border-slate-600 rounded-lg text-white text-xs font-medium transition-all duration-150 ${
-                    currentlyPlayingKey === 'Space' ? 'bg-purple-600 transform scale-95' : ''
-                  }`}
+                  onClick={() => setTestText('')}
+                  className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-white text-sm rounded-lg transition-colors duration-200 font-medium"
                 >
-                  Space Bar
+                  Clear
+                </button>
+                <button
+                  onClick={() => {
+                    if (keyboardRef.current) {
+                      keyboardRef.current.focus();
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg transition-colors duration-200 font-medium"
+                >
+                  Focus Input
                 </button>
               </div>
             </div>
+
+            {/* Current sound feedback */}
+            {isPlaying && (
+              <div className="mt-4 p-3 bg-blue-900/30 border border-blue-700/50 rounded-lg">
+                <p className="text-blue-300 text-sm text-center animate-pulse">
+                  🎵 Playing: {currentlyPlayingKey === 'generic' 
+                    ? `Sound ${(currentGenericIndex.current % ((currentProfile.sounds as any).generic?.length || 1)) || ((currentProfile.sounds as any).generic?.length || 1)}` 
+                    : currentlyPlayingKey}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Status */}
