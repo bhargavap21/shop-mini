@@ -33,8 +33,37 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
   const [selectedProfile, setSelectedProfile] = useState<keyof typeof SOUND_PROFILES>('holy-pandas');
   const audioContextRef = useRef<AudioContext | null>(null);
   const currentGenericIndex = useRef(0);
+  const keyToSoundMap = useRef<Map<string, number>>(new Map());
 
   const currentProfile = SOUND_PROFILES[selectedProfile];
+
+  // Function to get consistent sound index for a key
+  const getSoundIndexForKey = (key: string): number => {
+    // Check if we already have a mapping for this key
+    if (keyToSoundMap.current.has(key)) {
+      return keyToSoundMap.current.get(key)!;
+    }
+
+    // Create a consistent mapping based on key character for ALL keys
+    const availableSounds = currentProfile.sounds.generic.length;
+    let soundIndex = 0;
+
+    if (key.length === 1) {
+      // For single character keys, use character code
+      soundIndex = key.charCodeAt(0) % availableSounds;
+    } else {
+      // For longer keys like "Backspace", "Enter", "Space", use a hash of the key name
+      let hash = 0;
+      for (let i = 0; i < key.length; i++) {
+        hash = ((hash << 5) - hash + key.charCodeAt(i)) & 0xffffffff;
+      }
+      soundIndex = Math.abs(hash) % availableSounds;
+    }
+
+    // Store the mapping for consistency
+    keyToSoundMap.current.set(key, soundIndex);
+    return soundIndex;
+  };
 
   const initializeAudio = async () => {
     try {
@@ -68,7 +97,7 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
       let soundData: string;
       const profile = currentProfile.sounds;
       
-      // For profiles with special keys (Holy Pandas)
+      // For Holy Pandas profile - use special keys where available
       if (currentProfile.hasSpecialKeys && selectedProfile === 'holy-pandas') {
         if (key === ' ' || key === 'Space') {
           soundData = profile.space || profile.generic[0];
@@ -77,13 +106,15 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
         } else if (key === 'Backspace') {
           soundData = profile.backspace || profile.generic[0];
         } else {
-          soundData = profile.generic[currentGenericIndex.current % profile.generic.length];
-          currentGenericIndex.current++;
+          // Use consistent sound mapping for generic keys
+          const soundIndex = getSoundIndexForKey(key);
+          soundData = profile.generic[soundIndex];
         }
       } else {
-        // For profiles with only generic sounds (Banana Split) or fallback
-        soundData = profile.generic[currentGenericIndex.current % profile.generic.length];
-        currentGenericIndex.current++;
+        // For Banana Split - ALL keys use the evenly distributed generic sounds
+        // This includes Space, Enter, Backspace - they all get mapped to one of the 7 sounds
+        const soundIndex = getSoundIndexForKey(key);
+        soundData = profile.generic[soundIndex];
       }
 
       const audio = new Audio(soundData);
@@ -123,6 +154,7 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
   const handleProfileChange = (profileId: keyof typeof SOUND_PROFILES) => {
     setSelectedProfile(profileId);
     currentGenericIndex.current = 0; // Reset generic sound index
+    keyToSoundMap.current.clear(); // Clear key mappings for new profile
   };
 
   // Keyboard layout
@@ -216,7 +248,7 @@ export function MultiProfileKeyboardSounds({ className = '' }: MultiProfileKeybo
                   : 'bg-blue-600 hover:bg-blue-700'
               } text-white text-sm`}
             >
-              🎵 Test Sound ({currentGenericIndex.current % currentProfile.sounds.generic.length + 1}/{currentProfile.sounds.generic.length})
+              🎵 Test Sound (Mapped)
             </button>
             
             {currentProfile.hasSpecialKeys && (
