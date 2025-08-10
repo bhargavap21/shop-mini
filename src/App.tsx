@@ -415,8 +415,15 @@ export function App() {
 
         {/* 3D Keyboard View */}
         <div className="mb-8 h-96 rounded-2xl bg-gradient-to-br from-slate-900/60 to-slate-800/60 border border-slate-700/50 backdrop-blur-sm relative overflow-hidden">
-          <Canvas camera={{ position: [15, 10, 15], fov: 45 }}>
-            <Suspense fallback={null}>
+          <Suspense fallback={
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-white text-sm">Loading 3D Preview...</p>
+              </div>
+            </div>
+          }>
+            <Canvas camera={{ position: [15, 10, 15], fov: 45 }}>
               <Environment preset="studio" />
               <ambientLight intensity={0.4} />
               <pointLight position={[10, 10, 10]} intensity={1} />
@@ -441,8 +448,8 @@ export function App() {
                 autoRotate
                 autoRotateSpeed={0.5}
               />
-            </Suspense>
-          </Canvas>
+            </Canvas>
+          </Suspense>
           
           {/* 3D Controls hint */}
           <div className="absolute bottom-4 left-4 text-slate-400 text-xs bg-slate-900/60 px-3 py-2 rounded-lg backdrop-blur-sm">
