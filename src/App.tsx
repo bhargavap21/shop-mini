@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment } from '@react-three/drei'
 import { Keyboard3D } from './components/Keyboard3D'
 import { ComponentSearchModal } from './components/ComponentSearchModal'
+import { AdvancedHolyPandasKeyboard } from './components/AdvancedHolyPandasKeyboard'
 
 // Types for our keyboard configuration
 interface KeyboardConfig {
@@ -14,7 +15,7 @@ interface KeyboardConfig {
   stabilizers: 'cherry' | 'durock' | 'zeal'
 }
 
-type AppPage = 'welcome' | 'preferences' | 'builder'
+type AppPage = 'welcome' | 'preferences' | 'builder' | 'sound-test'
 
 export function App() {
   const [currentPage, setCurrentPage] = useState<AppPage>('welcome')
@@ -224,11 +225,18 @@ export function App() {
             }`}>
               <button
                 onClick={() => setCurrentPage('preferences')}
-                className="relative w-full bg-white text-slate-950 font-medium py-4 px-6 rounded-2xl shadow-lg shadow-white/10 hover:shadow-white/30 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] overflow-hidden group"
+                className="relative w-full bg-white text-slate-950 font-medium py-4 px-6 rounded-2xl shadow-lg shadow-white/10 hover:shadow-white/30 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] overflow-hidden group mb-3"
               >
                 {/* Animated background effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
                 <span className="relative z-10">Start Building</span>
+              </button>
+              
+              <button
+                onClick={() => setCurrentPage('sound-test')}
+                className="relative w-full bg-emerald-600 text-white font-medium py-3 px-6 rounded-2xl border border-emerald-500 hover:bg-emerald-700 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                🎵 Test Keyboard Sounds
               </button>
             </div>
 
@@ -400,6 +408,36 @@ export function App() {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Sound Test Page
+  if (currentPage === 'sound-test') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-slate-950 to-zinc-950">
+        <div className="pt-4 px-4 pb-8">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setCurrentPage('welcome')}
+                className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/50 text-slate-300 hover:text-white hover:bg-slate-900/80 transition-all duration-200"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <div>
+                <h1 className="text-xl font-semibold text-white">Sound Test</h1>
+                <p className="text-slate-400 text-sm">Experience different keyboard switch sounds</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Sound Demo Component */}
+          <AdvancedHolyPandasKeyboard />
         </div>
       </div>
     )
